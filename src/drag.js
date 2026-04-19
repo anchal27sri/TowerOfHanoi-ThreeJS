@@ -15,6 +15,7 @@ const offset = new THREE.Vector3();
 
 let isDragging = false;
 let draggedRing = null;
+let dragSide = 0; // -1 = left of rod, +1 = right of rod, 0 = undetermined
 
 export function getDraggedRing() {
   return draggedRing;
@@ -39,18 +40,22 @@ function clampDragPosition(ring, newX, newY, rings) {
         newX = PEG_X + (distXToPeg >= 0 ? THREADED_MAX_X : -THREADED_MAX_X);
       }
     } else {
-      if (absDistX < OUTSIDE_MIN_X) {
-        if (newY < ROD_TOP_Y - RING_TUBE_RADIUS) {
-          newX = PEG_X + (distXToPeg >= 0 ? OUTSIDE_MIN_X : -OUTSIDE_MIN_X);
-        }
+      // Lock to the side the ring started on — prevent teleporting through
+      if (dragSide !== 0 && absDistX < OUTSIDE_MIN_X) {
+        newX = PEG_X + dragSide * OUTSIDE_MIN_X;
+      } else if (absDistX < OUTSIDE_MIN_X) {
+        newX = PEG_X + (distXToPeg >= 0 ? OUTSIDE_MIN_X : -OUTSIDE_MIN_X);
       }
     }
   } else {
+    // Above the rod — free to cross sides, update dragSide
     if (absDistX < THREADED_MAX_X) {
       ring.threaded = true;
     } else if (absDistX > OUTSIDE_MIN_X) {
       ring.threaded = false;
     }
+    // Reset side tracking when above the rod so ring can land on either side
+    dragSide = distXToPeg >= 0 ? 1 : -1;
   }
 
   // Base collision
@@ -99,6 +104,9 @@ export function setupDrag(renderer, camera, rings) {
       draggedRing = rings.find((r) => r.mesh === hits[0].object);
       isDragging = true;
       draggedRing.onPeg = false;
+      // Record which side of the rod the ring starts on
+      const startDistX = draggedRing.mesh.position.x - PEG_X;
+      dragSide = startDistX >= 0 ? 1 : -1;
       renderer.domElement.style.cursor = "grabbing";
       raycaster.ray.intersectPlane(dragPlane, intersection);
       offset.copy(intersection).sub(draggedRing.mesh.position);
@@ -126,6 +134,7 @@ export function setupDrag(renderer, camera, rings) {
       draggedRing.velocityY = 0;
       draggedRing.onPeg = false;
       draggedRing = null;
+      dragSide = 0;
     }
   });
 }
