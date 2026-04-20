@@ -16,9 +16,28 @@ const offset = new THREE.Vector3();
 let isDragging = false;
 let draggedRing = null;
 let dragSide = 0; // -1 = left of rod, +1 = right of rod, 0 = undetermined
+let enabled = true;
+
+let boundDown = null;
+let boundMove = null;
+let boundUp = null;
 
 export function getDraggedRing() {
   return draggedRing;
+}
+
+export function teardownDrag() {
+  if (boundDown) {
+    document.removeEventListener("pointerdown", boundDown, true);
+    document.removeEventListener("pointermove", boundMove, true);
+    window.removeEventListener("pointerup", boundUp);
+    boundDown = null;
+    boundMove = null;
+    boundUp = null;
+  }
+  isDragging = false;
+  draggedRing = null;
+  dragSide = 0;
 }
 
 function toNDC(event) {
@@ -99,14 +118,20 @@ function clampDragPosition(ring, newX, newY, rings) {
 export function setupDrag(renderer, camera, rings, worldGroup) {
   const groupOffsetY = worldGroup ? worldGroup.position.y : 0;
 
-  renderer.domElement.addEventListener("pointerdown", (event) => {
+  boundDown = (event) => {
+    event.preventDefault();
     toNDC(event);
     raycaster.setFromCamera(mouse, camera);
 
     const meshes = rings.map((r) => r.mesh);
-    const hits = raycaster.intersectObjects(meshes);
+    const hits = raycaster.intersectObjects(meshes, true); // recursive for hit areas
     if (hits.length > 0) {
-      draggedRing = rings.find((r) => r.mesh === hits[0].object);
+      // Map hit to parent ring mesh (hit could be on child hit area)
+      let hitObj = hits[0].object;
+      while (hitObj.parent && !rings.some((r) => r.mesh === hitObj)) {
+        hitObj = hitObj.parent;
+      }
+      draggedRing = rings.find((r) => r.mesh === hitObj);
       isDragging = true;
       draggedRing.onPeg = false;
       // Record which side of the rod the ring starts on
@@ -118,10 +143,11 @@ export function setupDrag(renderer, camera, rings, worldGroup) {
       intersection.y -= groupOffsetY;
       offset.copy(intersection).sub(draggedRing.mesh.position);
     }
-  });
+  };
 
-  renderer.domElement.addEventListener("pointermove", (event) => {
+  boundMove = (event) => {
     if (!isDragging || !draggedRing) return;
+    event.preventDefault();
     toNDC(event);
     raycaster.setFromCamera(mouse, camera);
     raycaster.ray.intersectPlane(dragPlane, intersection);
@@ -134,9 +160,9 @@ export function setupDrag(renderer, camera, rings, worldGroup) {
 
     draggedRing.mesh.position.x = clamped.x;
     draggedRing.mesh.position.y = clamped.y;
-  });
+  };
 
-  window.addEventListener("pointerup", () => {
+  boundUp = () => {
     if (isDragging && draggedRing) {
       isDragging = false;
       renderer.domElement.style.cursor = "default";
@@ -145,5 +171,9 @@ export function setupDrag(renderer, camera, rings, worldGroup) {
       draggedRing = null;
       dragSide = 0;
     }
-  });
+  };
+
+  renderer.domElement.addEventListener("pointerdown", boundDown);
+  renderer.domElement.addEventListener("pointermove", boundMove);
+  window.addEventListener("pointerup", boundUp);
 }
