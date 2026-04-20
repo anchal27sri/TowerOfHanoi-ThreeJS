@@ -14,6 +14,7 @@ const TOTAL_ROUNDS = 20;
 
 // Game phases
 const PHASE_DRAG = "drag";       // Part 1: user drags rings onto peg
+const PHASE_SETTLING = "settling"; // Waiting for rings to settle on peg
 const PHASE_SLIDE = "slide";     // Transition: peg slides left
 const PHASE_QUIZ = "quiz";       // Part 2: pick the count
 const PHASE_FEEDBACK = "feedback"; // Showing correct/wrong
@@ -83,7 +84,7 @@ function startRound() {
   state.pegMeshes = [peg.rod, peg.base];
 
   // Create rings
-  state.rings = createRings(state.world);
+  state.rings = createRings(state.world, state.camera);
   state.ringCount = state.rings.length;
 
   // Setup drag
@@ -104,11 +105,21 @@ export function updateGame(dt) {
     if (!dragged) {
       const allOnPeg = state.rings.every((r) => r.onPeg || r.threaded);
       if (allOnPeg) {
-        state.phase = PHASE_SLIDE;
-        // Slide world left so the peg ends up on the left third of screen
-        state.slideTarget = -(PEG_X * 1.2);
+        state.phase = PHASE_SETTLING;
         teardownDrag();
       }
+    }
+  }
+
+  if (state.phase === PHASE_SETTLING) {
+    applyGravity(state.rings, null, dt);
+    resolveRingCollisions(state.rings, null);
+
+    // Wait until all rings have zero velocity (fully settled)
+    const allSettled = state.rings.every((r) => Math.abs(r.velocityY) < 0.01);
+    if (allSettled) {
+      state.phase = PHASE_SLIDE;
+      state.slideTarget = -(PEG_X * 1.2);
     }
   }
 

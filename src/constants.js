@@ -21,19 +21,16 @@ export const RING_HALF_H = RING_TUBE_RADIUS;
 export const RING_COLORS = [
   0xffd700, 0xff4d4d, 0x4db8ff, 0x4dffa6,
   0xd94dff, 0xffb84d, 0xff4d93, 0x4dffd9,
+  0xff8c1a,
 ];
 
 // PEG_X is computed dynamically — see computePegX()
 export let PEG_X = 4; // default fallback
 
 export function computePegX(camera) {
-  // Visible half-width at z=0 plane from camera at z=8
-  const fovRad = (camera.fov * Math.PI) / 180;
-  const dist = camera.position.z; // distance to z=0
-  const halfHeight = dist * Math.tan(fovRad / 2);
-  const halfWidth = halfHeight * camera.aspect;
-  const rightEdge = camera.position.x + halfWidth;
-  const leftEdge = camera.position.x - halfWidth;
+  // For orthographic camera, use the right/left bounds directly
+  const rightEdge = camera.right + camera.position.x;
+  const leftEdge = camera.left + camera.position.x;
   const totalWidth = rightEdge - leftEdge;
   PEG_X = rightEdge - totalWidth * 0.2;
 }

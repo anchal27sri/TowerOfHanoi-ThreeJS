@@ -1,8 +1,8 @@
 import * as THREE from "three";
-import { RING_OUTER_RADIUS, RING_TUBE_RADIUS, RING_COLORS, GROUND_Y, PEG_X } from "./constants.js";
+import { RING_OUTER_RADIUS, RING_TUBE_RADIUS, RING_COLORS, GROUND_Y, PEG_X, RING_HALF_W } from "./constants.js";
 
-export function createRings(scene) {
-  const count = Math.floor(Math.random() * 3) + 3; // 3–5 rings
+export function createRings(scene, camera) {
+  const count = Math.floor(Math.random() * 7) + 1; // 1–7 rings
   const geometry = new THREE.TorusGeometry(RING_OUTER_RADIUS, RING_TUBE_RADIUS, 32, 100);
   const rings = [];
 
@@ -29,10 +29,18 @@ export function createRings(scene) {
     hitMesh.rotation.x = Math.PI / 2; // undo parent rotation
     mesh.add(hitMesh);
 
-    // Place all rings to the left of the peg, rightmost ring first
-    const spacing = 1.5;
-    const startX = PEG_X - 2 - (count - 1) * spacing;
-    mesh.position.set(startX + i * spacing, GROUND_Y, 0);
+    // Place rings centered in the area left of the peg
+    const gap = 1.5; // gap between peg and nearest ring
+    const areaRight = PEG_X - gap; // right boundary of ring area
+    const areaLeft = camera.left + camera.position.x + 0.5; // left edge with padding
+    const areaCenter = (areaLeft + areaRight) / 2;
+    const minSpacing = RING_HALF_W * 2 + 0.05;
+    const idealSpacing = 1.5;
+    const spacing = count > 1 ? Math.min(idealSpacing, (areaRight - areaLeft) / (count - 1)) : 0;
+    const finalSpacing = Math.max(spacing, minSpacing);
+    const totalWidth = (count - 1) * finalSpacing;
+    const startX = areaCenter - totalWidth / 2;
+    mesh.position.set(startX + i * finalSpacing, GROUND_Y, 0);
     mesh.castShadow = true;
     mesh.receiveShadow = true;
     scene.add(mesh);

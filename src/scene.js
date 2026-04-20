@@ -7,14 +7,19 @@ export function createScene() {
 }
 
 export function createCamera() {
-  const camera = new THREE.PerspectiveCamera(
-    45,
-    window.innerWidth / window.innerHeight,
+  const viewHeight = 7;
+  const aspect = window.innerWidth / window.innerHeight;
+  const viewWidth = viewHeight * aspect;
+  const camera = new THREE.OrthographicCamera(
+    -viewWidth / 2,  // left
+    viewWidth / 2,    // right
+    viewHeight / 2,   // top
+    -viewHeight / 2,  // bottom
     0.1,
     100
   );
-  camera.position.set(1, 1.3, 8);
-  camera.lookAt(1, -0.2, 0);
+  camera.position.set(1, 2.0, 8);
+  camera.lookAt(1, 0.0, 0);
   return camera;
 }
 
@@ -44,7 +49,13 @@ export function createLights(scene) {
 
 export function setupResize(camera, renderer) {
   window.addEventListener("resize", () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
+    const aspect = window.innerWidth / window.innerHeight;
+    const viewHeight = 7;
+    const viewWidth = viewHeight * aspect;
+    camera.left = -viewWidth / 2;
+    camera.right = viewWidth / 2;
+    camera.top = viewHeight / 2;
+    camera.bottom = -viewHeight / 2;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
   });
