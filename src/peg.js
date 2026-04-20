@@ -4,9 +4,11 @@ import { PEG_X, ROD_RADIUS, ROD_HEIGHT, BASE_RADIUS, BASE_HEIGHT } from "./const
 export function createPeg(scene) {
   const rodGeo = new THREE.CylinderGeometry(ROD_RADIUS, ROD_RADIUS, ROD_HEIGHT, 32);
   const rodMat = new THREE.MeshStandardMaterial({
-    color: 0x8b5e3c,
-    roughness: 0.6,
-    metalness: 0.3,
+    color: 0xf0c87a,
+    roughness: 0.4,
+    metalness: 0.1,
+    emissive: 0xf0c87a,
+    emissiveIntensity: 0.1,
   });
   const rod = new THREE.Mesh(rodGeo, rodMat);
   rod.position.set(PEG_X, ROD_HEIGHT / 2, 0);
@@ -15,9 +17,11 @@ export function createPeg(scene) {
 
   const baseGeo = new THREE.CylinderGeometry(BASE_RADIUS, BASE_RADIUS, BASE_HEIGHT, 32);
   const baseMat = new THREE.MeshStandardMaterial({
-    color: 0x6b4226,
-    roughness: 0.7,
-    metalness: 0.2,
+    color: 0xe8b86d,
+    roughness: 0.4,
+    metalness: 0.1,
+    emissive: 0xe8b86d,
+    emissiveIntensity: 0.1,
   });
   const base = new THREE.Mesh(baseGeo, baseMat);
   base.position.set(PEG_X, BASE_HEIGHT / 2, 0);

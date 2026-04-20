@@ -5,18 +5,27 @@ import { createPeg } from "./src/peg.js";
 import { createRings } from "./src/rings.js";
 import { setupDrag, getDraggedRing } from "./src/drag.js";
 import { applyGravity, resolveRingCollisions } from "./src/physics.js";
+import { computePegX } from "./src/constants.js";
 
 const scene = createScene();
 const camera = createCamera();
 const renderer = createRenderer();
 
+computePegX(camera);
+
 createLights(scene);
-createGround(scene);
-createPeg(scene);
 
-const rings = createRings(scene);
+// World group — offset downward so objects render on the carpet area of the background
+const world = new THREE.Group();
+world.position.y = -2.5;
+scene.add(world);
 
-setupDrag(renderer, camera, rings);
+createGround(world);
+createPeg(world);
+
+const rings = createRings(world);
+
+setupDrag(renderer, camera, rings, world);
 setupResize(camera, renderer);
 
 const clock = new THREE.Clock();

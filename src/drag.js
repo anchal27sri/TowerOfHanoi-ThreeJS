@@ -36,9 +36,8 @@ function clampDragPosition(ring, newX, newY, rings) {
   // Rod collision — threaded vs outside
   if (newY < ROD_TOP_Y) {
     if (ring.threaded) {
-      if (absDistX > THREADED_MAX_X) {
-        newX = PEG_X + (distXToPeg >= 0 ? THREADED_MAX_X : -THREADED_MAX_X);
-      }
+      // Threaded: lock X to peg center, only allow vertical movement
+      newX = PEG_X;
     } else {
       // Lock to the side the ring started on — prevent teleporting through
       if (dragSide !== 0 && absDistX < OUTSIDE_MIN_X) {
@@ -53,6 +52,10 @@ function clampDragPosition(ring, newX, newY, rings) {
       ring.threaded = true;
     } else if (absDistX > OUTSIDE_MIN_X) {
       ring.threaded = false;
+    }
+    // If threaded above the rod, still lock to center
+    if (ring.threaded) {
+      newX = PEG_X;
     }
     // Reset side tracking when above the rod so ring can land on either side
     dragSide = distXToPeg >= 0 ? 1 : -1;
@@ -93,7 +96,9 @@ function clampDragPosition(ring, newX, newY, rings) {
   return { x: newX, y: newY };
 }
 
-export function setupDrag(renderer, camera, rings) {
+export function setupDrag(renderer, camera, rings, worldGroup) {
+  const groupOffsetY = worldGroup ? worldGroup.position.y : 0;
+
   renderer.domElement.addEventListener("pointerdown", (event) => {
     toNDC(event);
     raycaster.setFromCamera(mouse, camera);
@@ -109,6 +114,8 @@ export function setupDrag(renderer, camera, rings) {
       dragSide = startDistX >= 0 ? 1 : -1;
       renderer.domElement.style.cursor = "grabbing";
       raycaster.ray.intersectPlane(dragPlane, intersection);
+      // Convert to local group space
+      intersection.y -= groupOffsetY;
       offset.copy(intersection).sub(draggedRing.mesh.position);
     }
   });
@@ -118,6 +125,8 @@ export function setupDrag(renderer, camera, rings) {
     toNDC(event);
     raycaster.setFromCamera(mouse, camera);
     raycaster.ray.intersectPlane(dragPlane, intersection);
+    // Convert to local group space
+    intersection.y -= groupOffsetY;
 
     const rawX = intersection.x - offset.x;
     const rawY = intersection.y - offset.y;
@@ -132,7 +141,7 @@ export function setupDrag(renderer, camera, rings) {
       isDragging = false;
       renderer.domElement.style.cursor = "default";
       draggedRing.velocityY = 0;
-      draggedRing.onPeg = false;
+      draggedRing.onPeg = draggedRing.threaded;
       draggedRing = null;
       dragSide = 0;
     }
