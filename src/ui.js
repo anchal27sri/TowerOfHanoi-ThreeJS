@@ -66,33 +66,6 @@ export function createUI() {
   document.body.appendChild(feedback);
   ui.feedback = feedback;
 
-  // Score badge (top right)
-  const scoreBadge = document.createElement("div");
-  scoreBadge.id = "score-badge";
-  scoreBadge.innerHTML = "0";
-  Object.assign(scoreBadge.style, {
-    position: "fixed",
-    top: "20px",
-    right: "20px",
-    width: "50px",
-    height: "50px",
-    borderRadius: "50%",
-    background: "linear-gradient(180deg, #3dc98a 0%, #28a06d 100%)",
-    color: "#fff",
-    fontFamily: "'Fredoka One', 'Comic Sans MS', cursive, sans-serif",
-    fontSize: "22px",
-    fontWeight: "bold",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    border: "3px solid #1a7a50",
-    boxShadow: "0 3px 10px rgba(0,0,0,0.3)",
-    zIndex: "100",
-    userSelect: "none",
-  });
-  document.body.appendChild(scoreBadge);
-  ui.scoreBadge = scoreBadge;
-
   return ui;
 }
 
@@ -101,7 +74,7 @@ export function updateRound(round) {
 }
 
 export function updateScore(score) {
-  ui.scoreBadge.innerHTML = score;
+  // Score display removed
 }
 
 export function showOptions(correctCount, onSelect) {
@@ -125,7 +98,9 @@ export function showOptions(correctCount, onSelect) {
     Object.assign(btn.style, {
       width: "90px",
       height: "90px",
-      background: "linear-gradient(180deg, #e8a33a 0%, #c47d1a 100%)",
+      backgroundImage: "url('integer_options_background.png')",
+      backgroundSize: "cover",
+      backgroundPosition: "center",
       color: "#fff",
       fontFamily: "'Fredoka One', 'Comic Sans MS', cursive, sans-serif",
       fontSize: "40px",
@@ -134,7 +109,7 @@ export function showOptions(correctCount, onSelect) {
       alignItems: "center",
       justifyContent: "center",
       borderRadius: "14px",
-      border: "3px solid #a0621a",
+      border: "none",
       boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
       cursor: "pointer",
       textShadow: "2px 2px 4px rgba(0,0,0,0.3)",
